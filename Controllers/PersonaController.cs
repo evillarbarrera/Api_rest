@@ -1,7 +1,16 @@
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Threading.Tasks;
 using MyApi.Models;
-using MyApi.Data;
+// using MyApi.Data;
 
 namespace MyApi.Controllers
 {
@@ -9,18 +18,36 @@ namespace MyApi.Controllers
     [Route("api/[controller]")]
     public class PersonaController : ControllerBase
     {
-        private readonly DBContext _context;
-
-        public PersonaController(DBContext context)
+        private readonly IConfiguration _configuration;
+        public PersonaController(IConfiguration configuration)
         {
-            Console.WriteLine(context);
-            _context = context;
+            _configuration = configuration;
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Persona>> GetPersona()
+        public JsonResult Get()
         {
-                return _context.Personas;
+            string query = @"SELECT Id,Nombre,Apellido,Direccion FROM bd_test.Persona";
+
+            DataTable table = new DataTable();
+            string sqlDataSource = _configuration.GetConnectionString("DefaultConnection");
+            MySqlDataReader myReader;
+            using(MySqlConnection mycon=new MySqlConnection(sqlDataSource))
+            {
+                mycon.Open();
+                Console.WriteLine("Conectado");
+                using(MySqlCommand myCommand=new MySqlCommand(query, mycon))
+                {
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+
+                    myReader.Close();
+                    Console.WriteLine(myReader);
+                    mycon.Close();
+                }
+            }
+
+            return new JsonResult(table);
         }
 
         // [HttpPost]
