@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -10,7 +8,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using MyApi.Models;
-// using MyApi.Data;
+using Newtonsoft.Json;
 
 namespace MyApi.Controllers
 {
@@ -24,41 +22,72 @@ namespace MyApi.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet]
-        public JsonResult Get()
+        [HttpGet("GetPersona")]
+        public string Get()
         {
-            string query = @"SELECT Id,Nombre,Apellido,Direccion FROM bd_test.Persona";
+            string query = @"SELECT Id,Nombre,Apellido,Direccion FROM Persona";
 
             DataTable table = new DataTable();
             string sqlDataSource = _configuration.GetConnectionString("DefaultConnection");
             MySqlDataReader myReader;
-            using(MySqlConnection mycon=new MySqlConnection(sqlDataSource))
+            string jsonResult = "";
+
+            using (MySqlConnection mycon = new MySqlConnection(sqlDataSource))
             {
                 mycon.Open();
-                Console.WriteLine("Conectado");
-                using(MySqlCommand myCommand=new MySqlCommand(query, mycon))
+
+                using (MySqlCommand myCommand = new MySqlCommand(query, mycon))
                 {
+
                     myReader = myCommand.ExecuteReader();
                     table.Load(myReader);
+                    if (table != null && table.Rows.Count > 0)
+                    {
+                        jsonResult = JsonConvert.SerializeObject(table, Formatting.Indented);
+                    }
 
                     myReader.Close();
-                    Console.WriteLine(myReader);
                     mycon.Close();
                 }
             }
 
-            return new JsonResult(table);
+            return jsonResult;
+
         }
 
-        // [HttpPost]
-        // public ActionResult<Persona> AddPersona(Item item)
-        // {
-        //     _context.Personas.Add(item);
-        //     _context.SaveChanges();
+        [HttpPost("InsertarPersona")]
+        public string Post()
+        {
+            string query = @"insert into Persona (Nombre,Apellido,Direccion) values
+                                                    (@Nombre,@Apellido,@Direccion);";
 
-        //     return item;       
-        // }
-    
+            DataTable table = new DataTable();
+            string sqlDataSource = _configuration.GetConnectionString("DefaultConnection");
+            MySqlDataReader myReader;
+            using (MySqlConnection mycon = new MySqlConnection(sqlDataSource))
+            {
+                mycon.Open();
+                using (MySqlCommand myCommand = new MySqlCommand(query, mycon))
+                {
+                    myCommand.Parameters.AddWithValue("@Nombre", "Prueba2");
+                    myCommand.Parameters.AddWithValue("@Apellido", "Prueba2");
+                    myCommand.Parameters.AddWithValue("@Direccion", "Prueba2");
+
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+
+                    myReader.Close();
+                    mycon.Close();
+                }
+            }
+
+            return "Logrado";
+        }
+
+
+
+
+
 
     }
 }
