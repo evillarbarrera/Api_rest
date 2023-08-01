@@ -85,6 +85,67 @@ namespace MyApi.Controllers
         }
 
 
+        [HttpPut("ActualizarPersona")]
+        public string Put()
+        {
+            string query = @"
+                        update Persona set 
+                        Direccion =@Direccion
+                        where Id=@Id;
+                        
+            ";
+
+            DataTable table = new DataTable();
+            string sqlDataSource = _configuration.GetConnectionString("DefaultConnection");
+            MySqlDataReader myReader;
+            using (MySqlConnection mycon = new MySqlConnection(sqlDataSource))
+            {
+                mycon.Open();
+                using (MySqlCommand myCommand = new MySqlCommand(query, mycon))
+                {
+                    myCommand.Parameters.AddWithValue("@Direccion", "Prueba Direccion");
+                    myCommand.Parameters.AddWithValue("@Id", "5");
+
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+
+                    myReader.Close();
+                    mycon.Close();
+                }
+            }
+
+            return "Logrado";
+        }
+
+        [HttpDelete("EliminarPersona")]
+        public string Delete()
+        {
+            string query = @"
+                        delete from Persona 
+                        where Id=@Id;
+                        
+            ";
+
+            DataTable table = new DataTable();
+            string sqlDataSource = _configuration.GetConnectionString("DefaultConnection");
+            MySqlDataReader myReader;
+            using (MySqlConnection mycon = new MySqlConnection(sqlDataSource))
+            {
+                mycon.Open();
+                using (MySqlCommand myCommand = new MySqlCommand(query, mycon))
+                {
+                    myCommand.Parameters.AddWithValue("@Id", "3");
+
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+
+                    myReader.Close();
+                    mycon.Close();
+                }
+            }
+
+            return "Deleted Successfully";
+        }
 
 
 
